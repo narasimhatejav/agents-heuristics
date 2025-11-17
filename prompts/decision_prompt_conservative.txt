@@ -1,0 +1,55 @@
+prompt = f"""
+Tool Catalog: {tool_descriptions}
+User Query: "{user_input}"
+{conversation_history_section}
+
+Generate `async def solve():` following these rules:
+- Before each tool call, paste Usage docstring in triple quotes
+- Call: await mcp.call_tool('tool_name', input) - string not variable
+- Parse: var = json.loads(result.content[0].text)["result"] - never inline in f-strings
+- Return 'FINAL_ANSWER: ...' or 'FURTHER_PROCESSING_REQUIRED: ...'
+- Use FURTHER_PROCESSING_REQUIRED for docs/webpages needing summary
+- If data already in query, skip tools and return FINAL_ANSWER
+- Output only Python code
+
+Example - Chained:
+```python
+import json
+async def solve():
+    """Convert to ASCII. Usage: input={{"input": {{"string": "INDIA"}}}}"""
+    result = await mcp.call_tool('strings_to_chars_to_int', {{"input": {{"string": "INDIA"}}}})
+    nums = json.loads(result.content[0].text)["result"]
+
+    """Sum exponentials. Usage: input={{"input": {{"numbers": [65]}}}}"""
+    result = await mcp.call_tool('int_list_to_exponential_sum', {{"input": {{"numbers": nums}}}})
+    final = json.loads(result.content[0].text)["result"]
+    return f"FINAL_ANSWER: {{final}}"
+```
+
+Example - Error handling:
+```python
+import json
+async def solve():
+    try:
+        """Company data. Usage: input={{"company_name": "Tesla"}}"""
+        result = await mcp.call_tool('company_overview', {{"input": {{"company_name": "Tesla"}}}})
+    except:
+        result = {{"content": [{{"text": "{{\\"result\\": \\"N/A\\"}}"}}]}}
+    final = json.loads(result.content[0].text if isinstance(result, CallToolResult) else result["content"][0]["text"])["result"]
+    return f"FINAL_ANSWER: {{final}}"
+```
+
+Example - FURTHER_PROCESSING_REQUIRED:
+```python
+async def solve():
+    """Search docs. Usage: input={{"input": {{"query": "q"}}}}"""
+    result = await mcp.call_tool('search_stored_documents', {{"input": {{"query": "DLF"}}}})
+    return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
+```
+
+Example - No tools needed:
+```python
+async def solve():
+    return "FINAL_ANSWER: [detailed synthesis from provided data]"
+```
+"""

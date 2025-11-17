@@ -1,0 +1,132 @@
+# config/heuristics_config.yaml
+# Configuration for heuristics system
+
+# Global settings
+enabled: true
+log_heuristic_results: true
+
+# Query-level heuristics (run before perception)
+query_heuristics:
+  query_length_filter:
+    enabled: true
+    max_words: 500
+    max_chars: 5000
+    max_sentence_length: 100
+    auto_truncate: false
+
+  pii_redaction:
+    enabled: true
+    redact_ssn: true
+    redact_credit_card: true
+    redact_email: true
+    redact_phone: true
+    replacement: "***REDACTED***"
+
+  query_deduplication:
+    enabled: true
+    cache_size: 100
+    similarity_threshold: 0.9
+    use_exact_match: true
+
+  ambiguity_detection:
+    enabled: true
+    min_query_length: 3
+    vague_words:
+      - "this"
+      - "that"
+      - "it"
+      - "something"
+      - "stuff"
+      - "thing"
+      - "things"
+    pronoun_threshold: 0.3
+
+  query_intent_classification:
+    enabled: true
+    intents:
+      search:
+        - "find"
+        - "search"
+        - "look for"
+        - "show me"
+        - "get"
+      calculation:
+        - "calculate"
+        - "compute"
+        - "sum"
+        - "total"
+        - "average"
+        - "mean"
+      summarization:
+        - "summarize"
+        - "summary"
+        - "overview"
+        - "explain"
+        - "describe"
+      comparison:
+        - "compare"
+        - "difference"
+        - "versus"
+        - "vs"
+        - "better"
+        - "worse"
+      question:
+        - "what"
+        - "when"
+        - "where"
+        - "who"
+        - "why"
+        - "how"
+        - "which"
+
+# Tool-level heuristics (run during planning)
+tool_heuristics:
+  tool_affinity_scoring:
+    enabled: true
+    min_samples: 3
+    success_threshold: 0.7
+    boost_factor: 1.5
+
+  time_based_prioritization:
+    enabled: true
+    slow_threshold_ms: 2000
+    fast_threshold_ms: 500
+    prefer_fast_for_simple: true
+
+  rate_limit_optimization:
+    enabled: true
+    max_calls_per_session: 10
+    max_calls_per_step: 5
+    expensive_tool_limit: 3
+    expensive_tools: []  # Add expensive tool names here
+
+# Result-level heuristics (run after execution)
+result_heuristics:
+  confidence_threshold:
+    enabled: true
+    min_confidence: 0.7
+    check_hedging_words: true
+    hedging_words:
+      - "maybe"
+      - "perhaps"
+      - "possibly"
+      - "might"
+      - "could"
+      - "probably"
+      - "uncertain"
+      - "unsure"
+      - "unclear"
+      - "not sure"
+      - "don't know"
+    hedging_threshold: 2
+
+  hallucination_detection:
+    enabled: false  # Disabled to prevent false positives
+    require_grounding: true
+    check_specific_claims: true
+    suspicious_patterns:
+      - "the document (says|states|mentions)"
+      - "according to (the|this)"
+      - "as stated in"
+      - "the data shows"
+      - "research indicates"
